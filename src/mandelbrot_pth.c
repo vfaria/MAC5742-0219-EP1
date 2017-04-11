@@ -11,6 +11,7 @@ double pixel_width;
 double pixel_height;
 
 int iteration_max = 200;
+int n_threads = 10;
 
 int image_size;
 unsigned char **image_buffer;
@@ -111,7 +112,7 @@ void write_to_file(){
     fclose(file);
 };
 
-void compute_mandelbrot(){
+void compute_mandelbrot(double i_x_start, double i_y_start, double i_x_end, double i_y_end){
     double z_x;
     double z_y;
     double z_x_squared;
@@ -125,14 +126,14 @@ void compute_mandelbrot(){
     double c_x;
     double c_y;
 
-    for(i_y = 0; i_y < i_y_max; i_y++){
+    for(i_y = i_y_start; i_y < i_y_end; i_y++){
         c_y = c_y_min + i_y * pixel_height;
 
         if(fabs(c_y) < pixel_height / 2){
             c_y = 0.0;
         };
 
-        for(i_x = 0; i_x < i_x_max; i_x++){
+        for(i_x = i_x_start; i_x < i_x_end; i_x++){
             c_x         = c_x_min + i_x * pixel_width;
 
             z_x         = 0.0;
@@ -158,12 +159,30 @@ void compute_mandelbrot(){
 };
 
 int main(int argc, char *argv[]){
+    int l;
+    int start_row, end_row, rows_per_thread;
     init(argc, argv);
 
     allocate_image_buffer();
 
-    compute_mandelbrot();
+    rows_per_thread = image_size / (n_threads - 1);
+    printf("Rows per thread: %d\n", rows_per_thread);
 
+    start_row = 0;
+    end_row = rows_per_thread;
+
+    /* Computation split in chunks of rows. TODO: Assign a chunk for each thread */
+    while (start_row < i_y_max) {
+      printf("Interval: %d to %d\n", start_row, end_row);
+      compute_mandelbrot(0, start_row, i_x_max, end_row);
+      
+      start_row = end_row;
+      end_row = start_row + rows_per_thread;
+      if (end_row > i_y_max) {
+	end_row = i_y_max;
+      }
+    }
+      
     write_to_file();
 
     return 0;
