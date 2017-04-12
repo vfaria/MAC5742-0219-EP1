@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <pthread.h>
+
+int NUM_THREADS = 10;
 
 double c_x_min;
 double c_x_max;
@@ -11,7 +14,6 @@ double pixel_width;
 double pixel_height;
 
 int iteration_max = 200;
-int n_threads = 10;
 
 int image_size;
 unsigned char **image_buffer;
@@ -40,6 +42,13 @@ int colors[17][3] = {
                         {106, 52, 3},
                         {16, 16, 16},
                     };
+
+struct compute_mandelbrot_args {
+    int i_x_start;
+    int i_y_start;
+    int i_x_end;
+    int i_y_end;
+};
 
 void allocate_image_buffer(){
     int rgb_size = 3;
@@ -112,7 +121,7 @@ void write_to_file(){
     fclose(file);
 };
 
-void compute_mandelbrot(double i_x_start, double i_y_start, double i_x_end, double i_y_end){
+void compute_mandelbrot(int i_x_start, int i_y_start, int i_x_end, int i_y_end){
     double z_x;
     double z_y;
     double z_x_squared;
@@ -158,32 +167,74 @@ void compute_mandelbrot(double i_x_start, double i_y_start, double i_x_end, doub
     };
 };
 
-int main(int argc, char *argv[]){
-    int l;
+/* Wrapper to compute_mandelbrot - use with pthread_create() */
+void *_compute_mandelbrot(void *thread_args) {
+    struct compute_mandelbrot_args *args;
+    args = (struct compute_mandelbrot_args *) thread_args;
+    printf("DEBUG: Thread running for rows %d to %d\n", args->i_y_start, args->i_y_end);
+
+    compute_mandelbrot(args->i_x_start, args->i_y_start, args->i_x_end, args->i_y_end);
+
+    printf("DEBUG: Thread done for rows %d to %d\n", args->i_y_start, args->i_y_end);
+    pthread_exit(NULL);
+}
+
+void threaded_compute_mandebrot() {
+    pthread_t threads[NUM_THREADS];
+    struct compute_mandelbrot_args thread_data_array[NUM_THREADS];
+
+    int t, rc;
     int start_row, end_row, rows_per_thread;
+
+    rows_per_thread = image_size / (NUM_THREADS - 1);
+    printf("DEBUG: Rows per thread: %d\n", rows_per_thread);
+
+    t = 0;
+    start_row = 0;
+    end_row = rows_per_thread;
+
+    while (start_row < i_y_max) {
+
+        thread_data_array[t].i_x_start = 0;
+        thread_data_array[t].i_y_start = start_row;
+        thread_data_array[t].i_x_end   = i_x_max;
+        thread_data_array[t].i_y_end   = end_row;
+
+        printf("DEBUG: Creating thread %d for rows %d to %d.\n", t, start_row, end_row);
+
+        rc = pthread_create(&threads[t], NULL, _compute_mandelbrot, (void*) &thread_data_array[t]);
+        if (rc) {
+            printf("Error creating thread: pthread_create() returned %d\n", rc);
+            exit(-1);
+        }
+
+        start_row = end_row;
+        end_row = start_row + rows_per_thread;
+        if (end_row > i_y_max) {
+            end_row = i_y_max;
+        }
+
+        t++;
+    }
+
+    printf("DEBUG: All threads created, will start joining...\n");
+
+    for (t = 0; t < NUM_THREADS; t++) {
+        printf("DEBUG: Joining thread %d...\n", t);
+        pthread_join(threads[t], NULL);
+    }
+
+    pthread_exit(NULL);
+}
+
+int main(int argc, char *argv[]){
     init(argc, argv);
 
     allocate_image_buffer();
 
-    rows_per_thread = image_size / (n_threads - 1);
-    printf("Rows per thread: %d\n", rows_per_thread);
+    threaded_compute_mandebrot();
 
-    start_row = 0;
-    end_row = rows_per_thread;
-
-    /* Computation split in chunks of rows. TODO: Assign a chunk for each thread */
-    while (start_row < i_y_max) {
-      printf("Interval: %d to %d\n", start_row, end_row);
-      compute_mandelbrot(0, start_row, i_x_max, end_row);
-      
-      start_row = end_row;
-      end_row = start_row + rows_per_thread;
-      if (end_row > i_y_max) {
-	end_row = i_y_max;
-      }
-    }
-      
-    write_to_file();
+    /* write_to_file(); */
 
     return 0;
 };
