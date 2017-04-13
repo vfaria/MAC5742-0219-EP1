@@ -223,8 +223,6 @@ void threaded_compute_mandebrot() {
         printf("DEBUG: Joining thread %d...\n", t);
         pthread_join(threads[t], NULL);
     }
-
-    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]){
@@ -234,7 +232,9 @@ int main(int argc, char *argv[]){
 
     threaded_compute_mandebrot();
 
-    /* write_to_file(); */
+    write_to_file();
+
+    pthread_exit(NULL);
 
     return 0;
 };
