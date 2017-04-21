@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <omp.h>
 
 double c_x_min;
 double c_x_max;
@@ -131,28 +132,31 @@ void compute_mandelbrot(){
         if(fabs(c_y) < pixel_height / 2){
             c_y = 0.0;
         };
+        #pragma omp parallel private(i_x, c_x, z_x, z_y, z_x_squared, z_y_squared, iteration)
+        {
+            #pragma omp for
+            for(i_x = 0; i_x < i_x_max; i_x++){
+                c_x         = c_x_min + i_x * pixel_width;
 
-        for(i_x = 0; i_x < i_x_max; i_x++){
-            c_x         = c_x_min + i_x * pixel_width;
+                z_x         = 0.0;
+                z_y         = 0.0;
 
-            z_x         = 0.0;
-            z_y         = 0.0;
+                z_x_squared = 0.0;
+                z_y_squared = 0.0;
 
-            z_x_squared = 0.0;
-            z_y_squared = 0.0;
+                for(iteration = 0;
+                    iteration < iteration_max && \
+                    ((z_x_squared + z_y_squared) < escape_radius_squared);
+                    iteration++){
+                    z_y         = 2 * z_x * z_y + c_y;
+                    z_x         = z_x_squared - z_y_squared + c_x;
 
-            for(iteration = 0;
-                iteration < iteration_max && \
-                ((z_x_squared + z_y_squared) < escape_radius_squared);
-                iteration++){
-                z_y         = 2 * z_x * z_y + c_y;
-                z_x         = z_x_squared - z_y_squared + c_x;
+                    z_x_squared = z_x * z_x;
+                    z_y_squared = z_y * z_y;
+                };
 
-                z_x_squared = z_x * z_x;
-                z_y_squared = z_y * z_y;
+                update_rgb_buffer(iteration, i_x, i_y);
             };
-
-            update_rgb_buffer(iteration, i_x, i_y);
         };
     };
 };
