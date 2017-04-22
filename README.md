@@ -2,10 +2,10 @@
 
 ```
 cd MAC5742-0219-EP1/src
-sudo ./run-measurements.sh <iterations> <n_threads>
+sudo ./run-measurements.sh <iterations> <k>
 ```
 
-Where `iterations` will set the upper bound for the image size (with the same semantics as the `ITERATIONS` variable at `run_measurements.sh`), while `n_threads` will set the number of threads for the paralelized versions.
+Where `iterations` will set the upper bound for the image size (with the same semantics as the `ITERATIONS` variable at `run_measurements.sh`), while `k` will set the upper bound on the number of threads (measurements will be done between 2 and 2 ** k threads)
 
 ## Modifications from the original repository ##
 

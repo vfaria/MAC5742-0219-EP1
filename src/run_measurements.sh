@@ -28,6 +28,7 @@ for NAME in ${NAMES[@]}; do
                 perf stat -r $MEASUREMENTS ./$NAME -0.188 -0.012 0.554 0.754 $SIZE >> triple_spiral.log 2>&1
                 SIZE=$(($SIZE * 2))
         done
+        SIZE=$INITIAL_SIZE
     else
         N_THREADS=2
         for ((t=1; t<=$N_POWER_THREADS; t++)); do
@@ -38,11 +39,10 @@ for NAME in ${NAMES[@]}; do
                     perf stat -r $MEASUREMENTS ./$NAME -0.188 -0.012 0.554 0.754 $SIZE $N_THREADS >> triple_spiral_$N_THREADSt.log 2>&1
                     SIZE=$(($SIZE * 2))
             done
-            N_THREADS=$N_THREADS * 2
+            N_THREADS=$(($N_THREADS * 2))
+            SIZE=$INITIAL_SIZE
         done
     fi
-
-    SIZE=$INITIAL_SIZE
 
     mv *.log results/$NAME
     rm output.ppm
