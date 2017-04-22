@@ -9,7 +9,7 @@ INITIAL_SIZE=16
 
 SIZE=$INITIAL_SIZE
 
-NAMES=('mandelbrot_seq' 'mandelbrot_pth' 'mandelbrot_omp')
+NAMES=('mandelbrot_seq' 'mandelbrot_seq_without_io' 'mandelbrot_pth' 'mandelbrot_omp')
 
 export OMP_NUM_THREADS=$N_THREADS
 

@@ -2,6 +2,7 @@
 *.ppm
 
 mandelbrot_seq
+mandelbrot_seq_without_io
 mandelbrot_pth
 mandelbrot_omp
 

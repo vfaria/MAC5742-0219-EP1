@@ -158,12 +158,11 @@ void compute_mandelbrot(int i_x_start, int i_y_start, int i_x_end, int i_y_end){
                 iteration++){
                 z_y         = 2 * z_x * z_y + c_y;
                 z_x         = z_x_squared - z_y_squared + c_x;
-
                 z_x_squared = z_x * z_x;
                 z_y_squared = z_y * z_y;
             };
 
-            update_rgb_buffer(iteration, i_x, i_y);
+            /* update_rgb_buffer(iteration, i_x, i_y); */
         };
     };
 };
@@ -183,15 +182,24 @@ void threaded_compute_mandebrot() {
     struct compute_mandelbrot_args thread_data_array[n_threads];
 
     int t, rc;
-    int start_row, end_row, rows_per_thread;
+    int start_row, end_row, rows_per_thread, unattributed_rows;
 
-    rows_per_thread = image_size / (n_threads - 1);
+    rows_per_thread = image_size / n_threads;
+    unattributed_rows = image_size % n_threads;
 
     t = 0;
-    start_row = 0;
-    end_row = rows_per_thread;
 
-    while (start_row < i_y_max) {
+    for (start_row = 0; start_row < i_y_max; start_row = end_row) {
+
+        end_row = start_row + rows_per_thread;
+        if (unattributed_rows > 0) {
+            end_row += 1;
+            unattributed_rows -= 1;
+        }
+
+        if (end_row > i_y_max) {
+            end_row = i_y_max;
+        }
 
         thread_data_array[t].i_x_start = 0;
         thread_data_array[t].i_y_start = start_row;
@@ -202,12 +210,6 @@ void threaded_compute_mandebrot() {
         if (rc) {
             printf("Error creating thread: pthread_create() returned %d\n", rc);
             exit(-1);
-        }
-
-        start_row = end_row;
-        end_row = start_row + rows_per_thread;
-        if (end_row > i_y_max) {
-            end_row = i_y_max;
         }
 
         t++;
@@ -221,11 +223,11 @@ void threaded_compute_mandebrot() {
 int main(int argc, char *argv[]){
     init(argc, argv);
 
-    allocate_image_buffer();
+    /* allocate_image_buffer(); */
 
     threaded_compute_mandebrot();
 
-    write_to_file();
+    /* write_to_file(); */
 
     pthread_exit(NULL);
 
