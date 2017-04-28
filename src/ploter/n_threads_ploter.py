@@ -7,49 +7,37 @@ import sys
 import os
 
 def main():
-    power = 4
-    x, y1, stdev1, e1, y2, stdev2, e2 = [], [], [], [], [], [], []
+    xi    = 1
+    x, y1, y2, stdev1, stdev2, e1, e2     = [], [], [], [], [], [], []
+     
+    title = '#threads x t (N=8192, fig='+ os.environ['FIGNAME'] +')' 
+    
+    infile = fileinput.input()
 
-    title = 'Seq vs. seq without io'
+    for line in infile:
+        pth_measure = line.strip('\n').split('\t')
+        omp_measure = next(infile).strip('\n').split('\t')
 
-    with open(sys.argv[1]) as f:
-        lines1 = f.readlines()
+        y1.append(float(pth_measure[0]))
+        y2.append(float(omp_measure[0]))
 
-    with open(sys.argv[2]) as f:
-        lines2 = f.readlines()
+        stdev1.append(float(pth_measure[1].replace('%', '')) / 100.0)
+        stdev2.append(float(omp_measure[1].replace('%', '')) / 100.0)
 
-    lines1 = [l.strip() for l in lines1]
-    lines2 = [l.strip() for l in lines2]
-
-    for i in range(len(lines1)):
-        line1 = lines1[i].split(' ')
-        line2 = lines2[i].split(' ')
-
-        y1.append(float(line1[0]))
-        y2.append(float(line2[0]))
-
-        stdev1.append(float(line1[1].replace('%', '')) / 100.0)
-        stdev2.append(float(line2[1].replace('%', '')) / 100.0)
-
-        x.append(2 ** power)
-
-        power += 1
-
-    log2 = lambda x: math.log(x, 2)
-    x = map(log2, x)
-    y1 = map(log2, y1)
-    y2 = map(log2, y2)
+        x.append(xi)
+        xi *= 2
 
     for i in range(len(y1)):
         e1.append(math.fabs(y1[i] * stdev1[i]))
         e2.append(math.fabs(y2[i] * stdev2[i]))
 
-    # plt.ylim([0,150])
+    fn1 = plt.errorbar(x, y1, e1, linestyle='solid', marker='^')
+    fn2 = plt.errorbar(x, y2, e2, linestyle='solid', marker='^')
 
-    plt.errorbar(x, y1, e1, linestyle='solid', marker='^')
-    plt.errorbar(x, y2, e2, linestyle='solid', marker='^')
-    plt.xlabel('lg N')
-    plt.ylabel('lg (Time) [s] - AVG of 10 runs')
+    plt.legend([fn1, fn2], ['pth', 'omp'])
+
+    plt.xlabel('#threads')
+    plt.ylabel('t [s] - AVG of 10 runs')
     plt.title(title)
     plt.show()
     # plt.savefig(os.environ['EP1219'] + '/ploter/pictures/' + title + '.png')
