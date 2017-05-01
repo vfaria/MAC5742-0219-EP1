@@ -10,7 +10,7 @@ def main():
     xi    = 1
     x, y1, y2, stdev1, stdev2, e1, e2     = [], [], [], [], [], [], []
      
-    title = '#threads x t (N=8192, fig='+ os.environ['FIGNAME'] +')' 
+    title = '#threads x CPU utilized (N=8192, fig='+ os.environ['FIGNAME'] +')' 
     
     infile = fileinput.input()
 
@@ -37,7 +37,7 @@ def main():
     plt.legend([fn1, fn2], ['pth', 'omp'])
 
     plt.xlabel('#threads')
-    plt.ylabel('t [s] - AVG of 10 runs')
+    plt.ylabel('CPU utilized')
     plt.title(title)
     plt.show()
     # plt.savefig(os.environ['EP1219'] + '/ploter/pictures/' + title + '.png')
