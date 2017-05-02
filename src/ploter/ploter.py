@@ -27,7 +27,8 @@ def main():
     for i in range(len(y)):
         e.append(math.fabs(y[i]*stdev[i]))
 
-    plt.ylim([0,150])
+    plt.figure(figsize=(20,20))
+    plt.ylim([0,70])
 
     plt.errorbar(x, y, e, linestyle='solid', marker='^')
     plt.xlabel('N')
