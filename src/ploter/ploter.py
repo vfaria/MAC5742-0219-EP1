@@ -21,15 +21,18 @@ def main():
         x.append(2**power)
         power += 1
 
-    x = map(math.log, x)
-    y = map(math.log, y)
+#    x = map(math.log, x)
+#    y = map(math.log, y)
 
     for i in range(len(y)):
         e.append(math.fabs(y[i]*stdev[i]))
 
+    plt.figure(figsize=(20,20))
+    plt.ylim([0,70])
+
     plt.errorbar(x, y, e, linestyle='solid', marker='^')
-    plt.xlabel('log N')
-    plt.ylabel('log Time  [s] - AVG of 10 runs')
+    plt.xlabel('N')
+    plt.ylabel('Time [s] - AVG of 10 runs')
     plt.title(title)
     plt.savefig(os.environ['EP1219'] + '/ploter/pictures/' + title + '.png')
 

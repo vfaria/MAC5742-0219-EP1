@@ -184,8 +184,17 @@ void threaded_compute_mandebrot() {
     int t, rc;
     int start_row, end_row, rows_per_thread, unattributed_rows;
 
-    rows_per_thread = image_size / n_threads;
-    unattributed_rows = image_size % n_threads;
+    for (t = 0; t < n_threads; t++) {
+        threads[t] = (unsigned long) NULL;
+    }
+
+    if (image_size >= n_threads) {
+        rows_per_thread = image_size / n_threads;
+        unattributed_rows = image_size % n_threads;
+    } else {
+        rows_per_thread = 1;
+        unattributed_rows = 0;
+    }
 
     t = 0;
 
@@ -216,7 +225,9 @@ void threaded_compute_mandebrot() {
     }
 
     for (t = 0; t < n_threads; t++) {
-        pthread_join(threads[t], NULL);
+        if (threads[t] != (unsigned long) NULL) {
+            pthread_join(threads[t], NULL);
+        }
     }
 }
 
